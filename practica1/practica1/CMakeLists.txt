@@ -1,0 +1,32 @@
+cmake_minimum_required(VERSION 2.6)
+
+project (practica1 CXX)
+
+set(PRACTICA1_HEADERS practica1.h NodoCola.h Cola.h Lista.h NodoUser.h NodoPila.h Pila.h)
+
+set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(PRACTICA1_CODEGEN_DIR "${PROJECT_BINARY_DIR}/codegen")
+
+PREPEND(PRACTICA1_HEADERS_PATHS ${PROJECT_SOURCE_DIR} ${PRACTICA1_HEADERS})
+
+CODEGEN_FILES(PRACTICA1_CODEGEN_SOURCES ${PRACTICA1_CODEGEN_DIR} ${PRACTICA1_HEADERS})
+
+add_custom_command(OUTPUT ${PRACTICA1_CODEGEN_SOURCES}
+    COMMAND ${NGREST_BIN_PATH}ngrestcg -i "${PROJECT_SOURCE_DIR}" -o ${PRACTICA1_CODEGEN_DIR} -t service ${PRACTICA1_HEADERS}
+    DEPENDS ${PRACTICA1_HEADERS_PATHS}
+)
+
+file(GLOB PRACTICA1_SOURCES ${PROJECT_SOURCE_DIR}/*.cpp)
+
+list(APPEND PRACTICA1_SOURCES ${PRACTICA1_CODEGEN_SOURCES})
+
+include_directories(${PROJECT_SOURCE_DIR} $ENV{NGREST_EXT_INCLUDES})
+
+add_library(practica1 MODULE ${PRACTICA1_SOURCES})
+
+set_target_properties(practica1 PROPERTIES PREFIX "")
+set_target_properties(practica1 PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SERVICES_DIR}"
+)
+
+target_link_libraries(practica1 ngrestutils ngrestcommon ngrestjson ngrestengine $ENV{NGREST_EXT_LIBS})
